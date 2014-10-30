@@ -68,6 +68,11 @@ typedef struct flowop {
 	avd_t		fo_rotatefd;	/* Attr */
 	avd_t		fo_fileindex;	/* Attr */
 	avd_t		fo_noreadahead; /* Attr */
+
+	avd_t		fo_offset;	/* Attr for lock/unlock */
+	avd_t		fo_length;	/* Attr for lock/unlock */
+	char		fo_locktype[16];/* Attr for lock/unlock */
+
 	struct flowstats	fo_stats;	/* Flow statistics */
 #ifdef HAVE_PROC_PID_STAT
 	hrtime_t	fo_start_usage;	/* record CPU usage values for each flowop at the start of flowop */	

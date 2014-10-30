@@ -170,6 +170,9 @@ tabular			{ return FSV_RANDTAB; }
 urandom			{ return FSV_URAND; }
 rand48			{ return FSV_RAND48; }
 noreadahead             { return FSA_NOREADAHEAD; }
+offset			{ return FSA_OFFSET; }
+length			{ return FSA_LENGTH; }
+locktype		{ return FSA_LOCKTYPE; }
 
 
 <INITIAL>\"			{ 

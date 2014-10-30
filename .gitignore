@@ -6,6 +6,7 @@ config.log
 config.status
 stamp-h1
 
+aslr.o
 eventgen.o
 fb_avl.o
 fb_cvar.o
@@ -30,3 +31,5 @@ utils.o
 vars.o
 
 tags
+cscope.out
+*.swp

@@ -105,6 +105,8 @@ static int flowoplib_appendfile(threadflow_t *threadflow, flowop_t *flowop);
 static int flowoplib_appendfilerand(threadflow_t *threadflow, flowop_t *flowop);
 static int flowoplib_deletefile(threadflow_t *threadflow, flowop_t *flowop);
 static int flowoplib_statfile(threadflow_t *threadflow, flowop_t *flowop);
+static int flowoplib_lockbyterange(threadflow_t *threadflow, flowop_t *flowop);
+static int flowoplib_unlockbyterange(threadflow_t *threadflow, flowop_t *flowop);
 static int flowoplib_finishoncount(threadflow_t *threadflow, flowop_t *flowop);
 static int flowoplib_finishonbytes(threadflow_t *threadflow, flowop_t *flowop);
 static int flowoplib_fsyncset(threadflow_t *threadflow, flowop_t *flowop);
@@ -159,6 +161,10 @@ static flowop_proto_t flowoplib_funcs[] = {
 	flowoplib_fsyncset, flowop_destruct_generic},
 	{FLOW_TYPE_IO, 0, "statfile", flowop_init_generic,
 	flowoplib_statfile, flowop_destruct_generic},
+	{FLOW_TYPE_IO, 0, "lockbyterange", flowop_init_generic,
+	flowoplib_lockbyterange, flowop_destruct_generic},
+	{FLOW_TYPE_IO, 0, "unlockbyterange", flowop_init_generic,
+	flowoplib_unlockbyterange, flowop_destruct_generic},
 	{FLOW_TYPE_IO, FLOW_ATTR_READ, "readwholefile", flowop_init_generic,
 	flowoplib_readwholefile, flowop_destruct_generic},
 	{FLOW_TYPE_IO, FLOW_ATTR_WRITE, "appendfile", flowop_init_generic,
@@ -2206,6 +2212,192 @@ flowoplib_statfile(threadflow_t *threadflow, flowop_t *flowop)
 	return (FILEBENCH_OK);
 }
 
+/*
+ * Acquire a byte-range lock of a file. Picks an arbitrary filesetentry with
+ * an existing file from the flowop's fileset, then performs a
+ * fcntl(F_SETLK) operation on it. Returns FILEBENCH_ERROR if the flowop has no
+ * associated fileset. Returns FILEBENCH_NORSC if an appropriate filesetentry
+ * cannot be found, and FILEBENCH_OK on success.
+ */
+static int
+flowoplib_lockbyterange(threadflow_t *threadflow, flowop_t *flowop)
+{
+	filesetentry_t *file;
+	fileset_t *fileset;
+	int fd = flowop->fo_fdnumber;
+
+	/* if fd specified and the file is open, use it to access file */
+	if ((fd > 0) && (threadflow->tf_fd[fd].fd_num > 0)) {
+
+		/* check whether file handle still valid */
+		if ((file = threadflow->tf_fse[fd]) == NULL) {
+			filebench_log(LOG_DEBUG_SCRIPT,
+			    "flowop %s trying to lock NULL file at fd = %d",
+			    flowop->fo_name, fd);
+			return (FILEBENCH_ERROR);
+		}
+
+		/* if here, we still have a valid file pointer */
+		fileset = file->fse_fileset;
+	} else {
+		/* Otherwise, pick arbitrary file */
+		file = NULL;
+		fileset = flowop->fo_fileset;
+	}
+
+	if (fileset == NULL) {
+		filebench_log(LOG_ERROR,
+		    "lockbyterange with no fileset specified");
+		return (FILEBENCH_ERROR);
+	}
+
+	/* can't be used with raw devices */
+	if (fileset->fs_attrs & FILESET_IS_RAW_DEV) {
+		filebench_log(LOG_ERROR,
+		    "flowop %s attempted to lock a RAW device",
+		    flowop->fo_name);
+		return (FILEBENCH_ERROR);
+	}
+
+	if (file == NULL) {
+		char path[MAXPATHLEN];
+		char *pathtmp;
+		int err;
+
+		/* pick arbitrary, existing (allocated) file */
+		if ((err = flowoplib_pickfile(&file, flowop,
+		    FILESET_PICKEXISTS, 0)) != FILEBENCH_OK) {
+			filebench_log(LOG_DEBUG_SCRIPT,
+			    "lockbyterange flowop %s failed to pick file",
+			    flowop->fo_name);
+			return (err);
+		}
+
+		/* resolve path and do a stat on file */
+		(void) fb_strlcpy(path, avd_get_str(fileset->fs_path),
+		    MAXPATHLEN);
+		(void) fb_strlcat(path, "/", MAXPATHLEN);
+		(void) fb_strlcat(path, avd_get_str(fileset->fs_name),
+		    MAXPATHLEN);
+		pathtmp = fileset_resolvepath(file);
+		(void) fb_strlcat(path, pathtmp, MAXPATHLEN);
+		free(pathtmp);
+
+		/* lock the file */
+		flowop_beginop(threadflow, flowop);
+		if (FB_LOCK(path, avd_get_int(flowop->fo_offset),
+                    avd_get_int(flowop->fo_length),
+                    flowop->fo_locktype) == -1)
+			filebench_log(LOG_ERROR,
+			    "lockbyterange flowop %s failed", flowop->fo_name);
+		flowop_endop(threadflow, flowop, 0);
+
+		fileset_unbusy(file, FALSE, FALSE, 0);
+	} else {
+		/* lock specific file */
+		/*flowop_beginop(threadflow, flowop);*/
+		/*if (FB_FSTAT(&threadflow->tf_fd[fd], &statbuf) == -1)*/
+			/*filebench_log(LOG_ERROR,*/
+				/*"lockbyterange flowop %s failed", flowop->fo_name);*/
+		/*flowop_endop(threadflow, flowop, 0);*/
+        filebench_log(LOG_ERROR, "lockbyterange by FD not supported");
+	}
+
+	return (FILEBENCH_OK);
+}
+
+/*
+ * Release a byte-range lock of a file. Picks an arbitrary filesetentry with
+ * an existing file from the flowop's fileset, then performs a
+ * fcntl(F_SETLK) operation on it. Returns FILEBENCH_ERROR if the flowop has no
+ * associated fileset. Returns FILEBENCH_NORSC if an appropriate filesetentry
+ * cannot be found, and FILEBENCH_OK on success.
+ */
+static int
+flowoplib_unlockbyterange(threadflow_t *threadflow, flowop_t *flowop)
+{
+	filesetentry_t *file;
+	fileset_t *fileset;
+	int fd = flowop->fo_fdnumber;
+
+	/* if fd specified and the file is open, use it to access file */
+	if ((fd > 0) && (threadflow->tf_fd[fd].fd_num > 0)) {
+
+		/* check whether file handle still valid */
+		if ((file = threadflow->tf_fse[fd]) == NULL) {
+			filebench_log(LOG_DEBUG_SCRIPT,
+			    "flowop %s trying to unlock NULL file at fd = %d",
+			    flowop->fo_name, fd);
+			return (FILEBENCH_ERROR);
+		}
+
+		/* if here, we still have a valid file pointer */
+		fileset = file->fse_fileset;
+	} else {
+		/* Otherwise, pick arbitrary file */
+		file = NULL;
+		fileset = flowop->fo_fileset;
+	}
+
+	if (fileset == NULL) {
+		filebench_log(LOG_ERROR,
+		    "unlockbyterange with no fileset specified");
+		return (FILEBENCH_ERROR);
+	}
+
+	/* can't be used with raw devices */
+	if (fileset->fs_attrs & FILESET_IS_RAW_DEV) {
+		filebench_log(LOG_ERROR,
+		    "flowop %s attempted to unlock a RAW device",
+		    flowop->fo_name);
+		return (FILEBENCH_ERROR);
+	}
+
+	if (file == NULL) {
+		char path[MAXPATHLEN];
+		char *pathtmp;
+		int err;
+
+		/* pick arbitrary, existing (allocated) file */
+		if ((err = flowoplib_pickfile(&file, flowop,
+		    FILESET_PICKEXISTS, 0)) != FILEBENCH_OK) {
+			filebench_log(LOG_DEBUG_SCRIPT,
+			    "unlockbyterange flowop %s failed to pick file",
+			    flowop->fo_name);
+			return (err);
+		}
+
+		/* resolve path and do a stat on file */
+		(void) fb_strlcpy(path, avd_get_str(fileset->fs_path),
+		    MAXPATHLEN);
+		(void) fb_strlcat(path, "/", MAXPATHLEN);
+		(void) fb_strlcat(path, avd_get_str(fileset->fs_name),
+		    MAXPATHLEN);
+		pathtmp = fileset_resolvepath(file);
+		(void) fb_strlcat(path, pathtmp, MAXPATHLEN);
+		free(pathtmp);
+
+		/* unlock the file */
+		flowop_beginop(threadflow, flowop);
+		if (FB_LOCK(path, avd_get_int(flowop->fo_offset),
+                    avd_get_int(flowop->fo_length), "unlock") == -1)
+			filebench_log(LOG_ERROR,
+			    "unlockbyterange flowop %s failed", flowop->fo_name);
+		flowop_endop(threadflow, flowop, 0);
+
+		fileset_unbusy(file, FALSE, FALSE, 0);
+	} else {
+		/* unlock specific file */
+		/*flowop_beginop(threadflow, flowop);*/
+		/*if (FB_FSTAT(&threadflow->tf_fd[fd], &statbuf) == -1)*/
+			/*filebench_log(LOG_ERROR,*/
+				/*"unlockbyterange flowop %s failed", flowop->fo_name);*/
+		/*flowop_endop(threadflow, flowop, 0);*/
+        filebench_log(LOG_ERROR, "unlockbyterange by FD not supported");
+	}
+
+	return (FILEBENCH_OK);
+}
 
 /*
  * Additional reads and writes. Read and write whole files, write
@@ -2728,6 +2920,14 @@ flowoplib_usage()
 	    "flowop finishoncount name=<name>,value=<ops/s>\n");
 	(void) fprintf(stderr,
 	    "flowop finishonbytes name=<name>,value=<bytes>\n");
+	(void) fprintf(stderr,
+	    "flowop [lockbyterange|unlockbyterange] name=<name>,\n");
+    (void) fprintf(stderr,
+        "               filename|fileset=<fname>,\n");
+    (void) fprintf(stderr,
+        "               offset=<offset>,length=<length>\n");
+    (void) fprintf(stderr,
+        "               type=<read|write>\n");
 	(void) fprintf(stderr, "\n");
 	(void) fprintf(stderr, "\n");
 }

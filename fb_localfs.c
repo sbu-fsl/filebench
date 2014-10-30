@@ -30,6 +30,7 @@
 #include "flowop.h"
 #include "threadflow.h" /* For aiolist definition */
 
+#include <errno.h>
 #include <fcntl.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -80,6 +81,8 @@ static int fb_lfs_stat(char *, struct stat64 *);
 static int fb_lfs_fstat(fb_fdesc_t *, struct stat64 *);
 static int fb_lfs_access(const char *, int);
 static void fb_lfs_recur_rm(char *);
+static int fb_lfs_lock(const char *path, off64_t offset, fbint_t length,
+		       const char *type);
 
 static fsplug_func_t fb_lfs_funcs =
 {
@@ -107,7 +110,8 @@ static fsplug_func_t fb_lfs_funcs =
 	fb_lfs_stat,		/* stat */
 	fb_lfs_fstat,		/* fstat */
 	fb_lfs_access,		/* access */
-	fb_lfs_recur_rm		/* recursive rm */
+	fb_lfs_recur_rm,	/* recursive rm */
+	fb_lfs_lock,		/* byte range lock */
 };
 
 #ifdef HAVE_AIO
@@ -690,4 +694,47 @@ static int
 fb_lfs_access(const char *path, int amode)
 {
 	return (access(path, amode));
+}
+
+static int
+fb_lfs_lock(const char *path, off64_t offset, fbint_t length,
+	    const char *type)
+{
+	int ret = 0;
+	int fd = open(path, O_RDWR);
+	if (fd < 0) {
+		filebench_log(LOG_ERROR,
+			      "cannot open %s for locking operation (%s): %s",
+			      path, type, strerror(errno));
+		return -1;
+	}
+	int lock_type = 0;
+	if (type[0] == '\0' || strncmp(type, "read", 16) == 0) {
+		filebench_log(LOG_DEBUG_IMPL, "acquire read lock %s:%ld--%ld",
+			      path, offset, (offset + length));
+		lock_type = F_RDLCK;
+	} else if (strncmp(type, "write", 16) == 0) {
+		filebench_log(LOG_DEBUG_IMPL, "acquire write lock %s:%ld--%ld",
+			      path, offset, (offset + length));
+		lock_type = F_WRLCK;
+	} else if (strncmp(type, "unlock", 16) == 0) {
+		filebench_log(LOG_DEBUG_IMPL, "unlock %s:%ld--%ld",
+			      path, offset, (offset + length));
+		lock_type = F_UNLCK;
+	} else {
+		filebench_log(LOG_ERROR, "unknown lock type: %s", type);
+		return -1;
+	}
+	struct flock lck = {
+		.l_type = lock_type,
+		.l_whence = SEEK_SET,
+		.l_start = offset,
+		.l_len = length,
+	};
+	if ((ret = fcntl(fd, F_SETLKW, &lck)) < 0) {
+		filebench_log(LOG_ERROR,
+			      "locking operation (%s) on %s failed: %s",
+			      type, path, strerror(errno));
+	}
+	return 0;
 }

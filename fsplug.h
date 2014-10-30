@@ -75,6 +75,7 @@ typedef struct fsplug_func_s {
 	int (*fsp_fstat)(fb_fdesc_t *, struct stat64 *);
 	int (*fsp_access)(const char *, int);
 	void (*fsp_recur_rm)(char *);
+	int (*fsp_lock)(const char *, off64_t, fbint_t, const char*);
 } fsplug_func_t;
 
 extern fsplug_func_t *fs_functions_vec;
@@ -142,5 +143,11 @@ extern fsplug_func_t *fs_functions_vec;
 
 #define	FB_SYMLINK(name1, name2) \
 	(*fs_functions_vec->fsp_symlink)(name1, name2)
+
+#define	FB_LOCK(path, offset, length, type) \
+	(*fs_functions_vec->fsp_lock)(path, offset, length, type)
+
+#define	FB_UNLOCK(path, offset, length) \
+	(*fs_functions_vec->fsp_lock)(path, offset, length, "unlock")
 
 #endif /* _FB_FSPLUG_H */

@@ -1,21 +1,19 @@
+/* A Bison parser, made by GNU Bison 3.0.2.  */
 
-/* A Bison parser, made by GNU Bison 2.4.1.  */
+/* Bison interface for Yacc-like parsers in C
 
-/* Skeleton interface for Bison's Yacc-like parsers in C
-   
-      Copyright (C) 1984, 1989, 1990, 2000, 2001, 2002, 2003, 2004, 2005, 2006
-   Free Software Foundation, Inc.
-   
+   Copyright (C) 1984, 1989-1990, 2000-2013 Free Software Foundation, Inc.
+
    This program is free software: you can redistribute it and/or modify
    it under the terms of the GNU General Public License as published by
    the Free Software Foundation, either version 3 of the License, or
    (at your option) any later version.
-   
+
    This program is distributed in the hope that it will be useful,
    but WITHOUT ANY WARRANTY; without even the implied warranty of
    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
    GNU General Public License for more details.
-   
+
    You should have received a copy of the GNU General Public License
    along with this program.  If not, see <http://www.gnu.org/licenses/>.  */
 
@@ -28,141 +26,152 @@
    special exception, which will cause the skeleton and the resulting
    Bison output files to be licensed under the GNU General Public
    License without this special exception.
-   
+
    This special exception was added by the Free Software Foundation in
    version 2.2 of Bison.  */
 
+#ifndef YY_YY_PARSER_GRAM_H_INCLUDED
+# define YY_YY_PARSER_GRAM_H_INCLUDED
+/* Debug traces.  */
+#ifndef YYDEBUG
+# define YYDEBUG 0
+#endif
+#if YYDEBUG
+extern int yydebug;
+#endif
 
-/* Tokens.  */
+/* Token type.  */
 #ifndef YYTOKENTYPE
 # define YYTOKENTYPE
-   /* Put the tokens into the symbol table, so that GDB and other debuggers
-      know about them.  */
-   enum yytokentype {
-     FSC_LIST = 258,
-     FSC_DEFINE = 259,
-     FSC_QUIT = 260,
-     FSC_DEBUG = 261,
-     FSC_CREATE = 262,
-     FSC_SLEEP = 263,
-     FSC_STATS = 264,
-     FSC_FOREACH = 265,
-     FSC_SET = 266,
-     FSC_SHUTDOWN = 267,
-     FSC_LOG = 268,
-     FSC_SYSTEM = 269,
-     FSC_FLOWOP = 270,
-     FSC_EVENTGEN = 271,
-     FSC_ECHO = 272,
-     FSC_RUN = 273,
-     FSC_PSRUN = 274,
-     FSC_WARMUP = 275,
-     FSC_NOUSESTATS = 276,
-     FSC_FSCHECK = 277,
-     FSC_FSFLUSH = 278,
-     FSC_USAGE = 279,
-     FSC_HELP = 280,
-     FSC_VERSION = 281,
-     FSC_ENABLE = 282,
-     FSC_DOMULTISYNC = 283,
-     FSV_STRING = 284,
-     FSV_VAL_INT = 285,
-     FSV_VAL_NEGINT = 286,
-     FSV_VAL_BOOLEAN = 287,
-     FSV_VARIABLE = 288,
-     FSV_WHITESTRING = 289,
-     FSV_RANDUNI = 290,
-     FSV_RANDTAB = 291,
-     FSV_URAND = 292,
-     FSV_RAND48 = 293,
-     FSE_FILE = 294,
-     FSE_PROC = 295,
-     FSE_THREAD = 296,
-     FSE_CLEAR = 297,
-     FSE_SNAP = 298,
-     FSE_DUMP = 299,
-     FSE_DIRECTORY = 300,
-     FSE_COMMAND = 301,
-     FSE_FILESET = 302,
-     FSE_XMLDUMP = 303,
-     FSE_RAND = 304,
-     FSE_MODE = 305,
-     FSE_MULTI = 306,
-     FSE_MULTIDUMP = 307,
-     FSK_SEPLST = 308,
-     FSK_OPENLST = 309,
-     FSK_CLOSELST = 310,
-     FSK_OPENPAR = 311,
-     FSK_CLOSEPAR = 312,
-     FSK_ASSIGN = 313,
-     FSK_IN = 314,
-     FSK_QUOTE = 315,
-     FSA_SIZE = 316,
-     FSA_PREALLOC = 317,
-     FSA_PARALLOC = 318,
-     FSA_PATH = 319,
-     FSA_REUSE = 320,
-     FSA_PROCESS = 321,
-     FSA_MEMSIZE = 322,
-     FSA_RATE = 323,
-     FSA_CACHED = 324,
-     FSA_READONLY = 325,
-     FSA_TRUSTTREE = 326,
-     FSA_IOSIZE = 327,
-     FSA_FILE = 328,
-     FSA_WSS = 329,
-     FSA_NAME = 330,
-     FSA_RANDOM = 331,
-     FSA_INSTANCES = 332,
-     FSA_DSYNC = 333,
-     FSA_TARGET = 334,
-     FSA_ITERS = 335,
-     FSA_NICE = 336,
-     FSA_VALUE = 337,
-     FSA_BLOCKING = 338,
-     FSA_HIGHWATER = 339,
-     FSA_DIRECTIO = 340,
-     FSA_DIRWIDTH = 341,
-     FSA_FD = 342,
-     FSA_SRCFD = 343,
-     FSA_ROTATEFD = 344,
-     FSA_ENTRIES = 345,
-     FSA_DIRDEPTHRV = 346,
-     FSA_DIRGAMMA = 347,
-     FSA_USEISM = 348,
-     FSA_TYPE = 349,
-     FSA_RANDTABLE = 350,
-     FSA_RANDSRC = 351,
-     FSA_ROUND = 352,
-     FSA_LEAFDIRS = 353,
-     FSA_INDEXED = 354,
-     FSA_FSTYPE = 355,
-     FSA_RANDSEED = 356,
-     FSA_RANDGAMMA = 357,
-     FSA_RANDMEAN = 358,
-     FSA_MIN = 359,
-     FSA_MAX = 360,
-     FSA_MASTER = 361,
-     FSA_CLIENT = 362,
-     FSS_TYPE = 363,
-     FSS_SEED = 364,
-     FSS_GAMMA = 365,
-     FSS_MEAN = 366,
-     FSS_MIN = 367,
-     FSS_SRC = 368,
-     FSS_ROUND = 369,
-     FSA_LVAR_ASSIGN = 370,
-     FSA_ALLDONE = 371,
-     FSA_FIRSTDONE = 372,
-     FSA_TIMEOUT = 373,
-     FSC_OSPROF_ENABLE = 374,
-     FSC_OSPROF_DISABLE = 375,
-     FSA_NOREADAHEAD = 376,
-     FSA_IOPRIO = 377,
-     FSA_WRITEONLY = 378,
-     FSE_CVAR = 379,
-     FSA_PARAMETERS = 380
-   };
+  enum yytokentype
+  {
+    FSC_LIST = 258,
+    FSC_DEFINE = 259,
+    FSC_QUIT = 260,
+    FSC_DEBUG = 261,
+    FSC_CREATE = 262,
+    FSC_SLEEP = 263,
+    FSC_STATS = 264,
+    FSC_FOREACH = 265,
+    FSC_SET = 266,
+    FSC_SHUTDOWN = 267,
+    FSC_LOG = 268,
+    FSC_SYSTEM = 269,
+    FSC_FLOWOP = 270,
+    FSC_EVENTGEN = 271,
+    FSC_ECHO = 272,
+    FSC_RUN = 273,
+    FSC_PSRUN = 274,
+    FSC_WARMUP = 275,
+    FSC_NOUSESTATS = 276,
+    FSC_FSCHECK = 277,
+    FSC_FSFLUSH = 278,
+    FSC_USAGE = 279,
+    FSC_HELP = 280,
+    FSC_VERSION = 281,
+    FSC_ENABLE = 282,
+    FSC_DOMULTISYNC = 283,
+    FSV_STRING = 284,
+    FSV_VAL_INT = 285,
+    FSV_VAL_NEGINT = 286,
+    FSV_VAL_BOOLEAN = 287,
+    FSV_VARIABLE = 288,
+    FSV_WHITESTRING = 289,
+    FSV_RANDUNI = 290,
+    FSV_RANDTAB = 291,
+    FSV_URAND = 292,
+    FSV_RAND48 = 293,
+    FSE_FILE = 294,
+    FSE_PROC = 295,
+    FSE_THREAD = 296,
+    FSE_CLEAR = 297,
+    FSE_SNAP = 298,
+    FSE_DUMP = 299,
+    FSE_DIRECTORY = 300,
+    FSE_COMMAND = 301,
+    FSE_FILESET = 302,
+    FSE_XMLDUMP = 303,
+    FSE_RAND = 304,
+    FSE_MODE = 305,
+    FSE_MULTI = 306,
+    FSE_MULTIDUMP = 307,
+    FSK_SEPLST = 308,
+    FSK_OPENLST = 309,
+    FSK_CLOSELST = 310,
+    FSK_OPENPAR = 311,
+    FSK_CLOSEPAR = 312,
+    FSK_ASSIGN = 313,
+    FSK_IN = 314,
+    FSK_QUOTE = 315,
+    FSA_SIZE = 316,
+    FSA_PREALLOC = 317,
+    FSA_PARALLOC = 318,
+    FSA_PATH = 319,
+    FSA_REUSE = 320,
+    FSA_PROCESS = 321,
+    FSA_MEMSIZE = 322,
+    FSA_RATE = 323,
+    FSA_CACHED = 324,
+    FSA_READONLY = 325,
+    FSA_TRUSTTREE = 326,
+    FSA_IOSIZE = 327,
+    FSA_FILE = 328,
+    FSA_WSS = 329,
+    FSA_NAME = 330,
+    FSA_RANDOM = 331,
+    FSA_INSTANCES = 332,
+    FSA_DSYNC = 333,
+    FSA_TARGET = 334,
+    FSA_ITERS = 335,
+    FSA_NICE = 336,
+    FSA_VALUE = 337,
+    FSA_BLOCKING = 338,
+    FSA_HIGHWATER = 339,
+    FSA_DIRECTIO = 340,
+    FSA_DIRWIDTH = 341,
+    FSA_FD = 342,
+    FSA_SRCFD = 343,
+    FSA_ROTATEFD = 344,
+    FSA_ENTRIES = 345,
+    FSA_DIRDEPTHRV = 346,
+    FSA_DIRGAMMA = 347,
+    FSA_USEISM = 348,
+    FSA_TYPE = 349,
+    FSA_RANDTABLE = 350,
+    FSA_RANDSRC = 351,
+    FSA_ROUND = 352,
+    FSA_LEAFDIRS = 353,
+    FSA_INDEXED = 354,
+    FSA_FSTYPE = 355,
+    FSA_RANDSEED = 356,
+    FSA_RANDGAMMA = 357,
+    FSA_RANDMEAN = 358,
+    FSA_MIN = 359,
+    FSA_MAX = 360,
+    FSA_MASTER = 361,
+    FSA_CLIENT = 362,
+    FSS_TYPE = 363,
+    FSS_SEED = 364,
+    FSS_GAMMA = 365,
+    FSS_MEAN = 366,
+    FSS_MIN = 367,
+    FSS_SRC = 368,
+    FSS_ROUND = 369,
+    FSA_LVAR_ASSIGN = 370,
+    FSA_ALLDONE = 371,
+    FSA_FIRSTDONE = 372,
+    FSA_TIMEOUT = 373,
+    FSC_OSPROF_ENABLE = 374,
+    FSC_OSPROF_DISABLE = 375,
+    FSA_NOREADAHEAD = 376,
+    FSA_IOPRIO = 377,
+    FSA_WRITEONLY = 378,
+    FSA_OFFSET = 379,
+    FSA_LENGTH = 380,
+    FSA_LOCKTYPE = 381,
+    FSE_CVAR = 382,
+    FSA_PARAMETERS = 383
+  };
 #endif
 /* Tokens.  */
 #define FSC_LIST 258
@@ -286,18 +295,18 @@
 #define FSA_NOREADAHEAD 376
 #define FSA_IOPRIO 377
 #define FSA_WRITEONLY 378
-#define FSE_CVAR 379
-#define FSA_PARAMETERS 380
+#define FSA_OFFSET 379
+#define FSA_LENGTH 380
+#define FSA_LOCKTYPE 381
+#define FSE_CVAR 382
+#define FSA_PARAMETERS 383
 
-
-
-
+/* Value type.  */
 #if ! defined YYSTYPE && ! defined YYSTYPE_IS_DECLARED
-typedef union YYSTYPE
+typedef union YYSTYPE YYSTYPE;
+union YYSTYPE
 {
-
-/* Line 1676 of yacc.c  */
-#line 154 "parser_gram.y"
+#line 154 "parser_gram.y" /* yacc.c:1909  */
 
 	int64_t		 ival;
 	unsigned char	 bval;
@@ -309,16 +318,15 @@ typedef union YYSTYPE
 	list_t		*list;
 	probtabent_t	*rndtb;
 
-
-
-/* Line 1676 of yacc.c  */
-#line 316 "parser_gram.h"
-} YYSTYPE;
+#line 322 "parser_gram.h" /* yacc.c:1909  */
+};
 # define YYSTYPE_IS_TRIVIAL 1
-# define yystype YYSTYPE /* obsolescent; will be withdrawn */
 # define YYSTYPE_IS_DECLARED 1
 #endif
 
+
 extern YYSTYPE yylval;
 
+int yyparse (void);
 
+#endif /* !YY_YY_PARSER_GRAM_H_INCLUDED  */

@@ -193,6 +193,7 @@ static void parser_osprof_disable(cmd_t *cmd);
 %token FSA_NOREADAHEAD
 %token FSA_IOPRIO
 %token FSA_WRITEONLY
+%token FSA_OFFSET FSA_LENGTH FSA_LOCKTYPE
 %token FSE_CVAR FSA_PARAMETERS
 
 %type <ival> FSV_VAL_INT FSV_VAL_NEGINT
@@ -1354,7 +1355,10 @@ attrs_flowop:
 | FSA_BLOCKING { $$ = FSA_BLOCKING;}
 | FSA_HIGHWATER { $$ = FSA_HIGHWATER;}
 | FSA_IOSIZE { $$ = FSA_IOSIZE;}
-| FSA_NOREADAHEAD { $$ = FSA_NOREADAHEAD;};
+| FSA_NOREADAHEAD { $$ = FSA_NOREADAHEAD;}
+| FSA_OFFSET { $$ = FSA_OFFSET; }
+| FSA_LENGTH { $$ = FSA_LENGTH; }
+| FSA_LOCKTYPE { $$ = FSA_LOCKTYPE; };
 
 attrs_eventgen:
   FSA_RATE { $$ = FSA_RATE;};
@@ -2331,7 +2335,24 @@ parser_flowop_get_attrs(cmd_t *cmd, flowop_t *flowop)
 	else
 		flowop->fo_noreadahead = avd_bool_alloc(FALSE);
 
+	/* byte-range lock offset */
+	if ((attr = get_attr_integer(cmd, FSA_OFFSET)))
+		flowop->fo_offset = attr->attr_avd;
+	else
+		flowop->fo_offset = NULL;
+	/* FIXME: avd_int_alloc(0)? */
+	/* TODO: allow offset to be a random variable */
 
+	/* byte-range lock length */
+	if ((attr = get_attr_integer(cmd, FSA_LENGTH)))
+		flowop->fo_length = attr->attr_avd;
+	else
+		flowop->fo_length = NULL;
+
+	/* byte-range lock type */
+	if ((attr = get_attr(cmd, FSA_LOCKTYPE))) {
+		strncpy(flowop->fo_locktype, avd_get_str(attr->attr_avd), 16);
+	}
 }
 
 /*
@@ -3278,7 +3299,11 @@ parser_directory(cmd_t *cmd)
 	(void) strcat(newdir, dir);
 	(void) mkdir(newdir, 0755);
 	filebench_log(LOG_VERBOSE, "Change dir to %s", newdir);
-	ret = chdir(newdir);
+	if ((ret = chdir(newdir)) < 0) {
+		filebench_log(LOG_ERROR, "Cannot change directory to %s: %s",
+			      newdir, strerror(errno));
+		return;
+	}
 	free(dir);
 }
 
